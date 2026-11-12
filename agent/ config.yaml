@@ -1,0 +1,2 @@
+model: "gemini/gemini-2.5-flash" # or "groq/<model>" or "ollama/qwen2.5:7b"
+max_steps: 8
