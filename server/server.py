@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from mcp.server.fastmcp import FastMCP
 
-from tools import tools_text, tools_image
+from tools import tools_text, tools_image ,tools_analysis
 
 mcp = FastMCP("arabic-news")
 
@@ -53,6 +53,7 @@ def get_article(article_id: str) -> dict:
 
 tools_text.register(mcp)
 tools_image.register(mcp)
+tools_analysis.register(mcp)
 
 
 if __name__ == "__main__":
