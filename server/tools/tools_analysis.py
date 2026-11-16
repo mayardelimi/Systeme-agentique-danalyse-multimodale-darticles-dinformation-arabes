@@ -202,4 +202,7 @@ def analyze(text: str, max_keywords: int = 8, summary_sentences: int = 2) -> dic
 def register(mcp):
     @mcp.tool()
     def analyze_text(text: str, max_keywords: int = 8, summary_sentences: int = 2) -> dict:
+        """Extract keywords, named entities and an extractive summary from an Arabic
+        article body. entities=null means NER was not computed (do not report any
+        entities); entities=[] means none were found. Always mention any warnings."""        
         return analyze(text, max_keywords, summary_sentences)

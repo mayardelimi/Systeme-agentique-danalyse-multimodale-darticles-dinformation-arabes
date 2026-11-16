@@ -3,6 +3,7 @@ import re
 from pathlib import Path
 
 import joblib
+import mcp
 
 MODEL_PATH = Path(os.environ.get(
     "CLASSIFIER_PATH",
@@ -38,6 +39,7 @@ def normalize_arabic(text: str) -> str:
 
 
 def classify(text: str) -> dict:
+
     global _bundle
     if not isinstance(text, str) or not text.strip():
         return _error("invalid_input", "text is empty; pass the article body (fetch it with get_article).")
@@ -73,10 +75,19 @@ def classify(text: str) -> dict:
 def register(mcp):
     @mcp.tool()
     def preprocess_text(text: str) -> dict:
+        """Normalize Arabic text (diacritics, alef/ya/ta-marbuta, tatweel).
+        Only call this when the user explicitly asks for normalized text.
+        classify_text and analyze_text already normalize internally.""" 
         if not isinstance(text, str) or not text.strip():
             return _error("invalid_input", "text is empty.")
         return {"normalized_text": normalize_arabic(text)}
 
     @mcp.tool()
     def classify_text(text: str) -> dict:
+        """Classify an Arabic news article into one of: culture, finance, medical,
+        politics, religion, sports, tech. Pass the full article body, not the title.
+        Returns category, confidence, top3 and low_confidence. If low_confidence is
+        true, report top3 instead of stating a single category as certain."""
+
+
         return classify(text)

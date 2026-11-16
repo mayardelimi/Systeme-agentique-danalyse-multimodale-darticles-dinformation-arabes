@@ -19,6 +19,11 @@ def ping() -> dict:
 
 @mcp.tool()
 def get_article(article_id: str) -> dict:
+    """Fetch one news article from the corpus by id (e.g. 'sanad_000123').
+    ALWAYS call this first. Returns title, text, source, date and image_path
+    (null if the article has no image). On error returns
+    {error, message, retryable}; do not retry when retryable is false."""
+    
     global _index
     article_id = str(article_id).strip()
     if not article_id:

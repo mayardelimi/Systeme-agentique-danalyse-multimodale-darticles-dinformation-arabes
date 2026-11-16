@@ -17,7 +17,8 @@ async def run(user_prompt: str):
         async with ClientSession(r, w) as session:
             await session.initialize()
             tools = to_llm_tools((await session.list_tools()).tools)
-            messages = [{"role": "user", "content": user_prompt}]
+            messages = [{"role": "system", "content": cfg["system_prompt"]},
+            {"role": "user", "content": user_prompt}]
 
             for _ in range(cfg["max_steps"]):
                 resp = await acompletion(model=cfg["model"], messages=messages,
@@ -27,16 +28,18 @@ async def run(user_prompt: str):
                 if not msg.tool_calls:
                     return msg.content
                 for call in msg.tool_calls:
-                    args = json.loads(call.function.arguments or "{}")
                     t0 = time.time()
-                    result = await session.call_tool(call.function.name, args)
-                    text = result.content[0].text
-                    with open("eval/trace.jsonl", "a", encoding="utf-8") as f:
-                        f.write(json.dumps({"tool": call.function.name, "args": args,
-                                            "ms": round((time.time()-t0)*1000)},
-                                           ensure_ascii=False) + "\n")
-                    messages.append({"role": "tool", "tool_call_id": call.id,
-                                     "content": text})
+                    try:
+                        args = json.loads(call.function.arguments or "{}")
+                        result = await session.call_tool(call.function.name, args)
+                        text = result.content[0].text if result.content else "{}"
+                        is_error = bool(result.isError)
+                    except Exception as e:                      # bad JSON, unknown tool, server crash
+                        args, is_error = {}, True
+                        text = json.dumps({"error": "tool_call_failed", "message": str(e), "retryable": False})
+                    # log the trace entry here, adding "error": is_error
+                    messages.append({"role": "tool", "tool_call_id": call.id, "content": text})
+
     return "max steps reached"
 
 if __name__ == "__main__":
